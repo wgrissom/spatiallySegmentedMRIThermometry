@@ -1,6 +1,6 @@
 run ~/startup.m
 % select the undersampling pattern to use
-sampPattern = '2x,1D'; % '3x,1D', '4x,1D'
+sampPattern = '1x,1D';%'2x,1D'; % '3x,1D', '4x,1D'
 
 % human 8-coil data
 load braininvivodata.mat % image series, brain ROI mask, and k-space sampling masks
@@ -21,6 +21,9 @@ libInd = 2; % brain appears to hit steady state by first dynamic
 NcgIters = 20; % CG image recon iterations
 
 switch sampPattern
+  case '1x,1D'
+    % use fully sampled pattern
+    kmask = logical(ones(dim));
   case '2x,1D'
     % use 1D 2x-undersampled pattern
     kmask = kmask2x1d;
@@ -106,7 +109,7 @@ for jj = libInd+1:Ndyn % loop over dynamics
     algp.maskbath = bathMask;   	% mask of water bath region
     algp.maskbrain = brainMask; 	% mask of brain region
     algp.stopThresh = 10^-3;    	% stop threshold (= fraction of previous cost that cost difference must be > than each iter)
-    algp.stepThresh = 0.00001;  	% threhold to break out of line search in NLCG algorithm
+    algp.stepThresh = 0.00001;  	% threshold to break out of line search in NLCG algorithm
     algp.sens = sens;           	% coil sensitivity maps
     algp.bathPenalty = 0;       	% bath roughness penalty
     algp.fBathIters = 2;        	% # bath CG iters per outer iteration
@@ -147,17 +150,10 @@ for jj = libInd+1:Ndyn % loop over dynamics
     thetaBaseSub_mean(jj) = mean(tmpBaseSub(hsmask));
     thetaSENSE_mean(jj) = mean(tmpSENSE(hsmask));
 
-    % compare to baseline subtraction with same field drift correction
-    %figure(101); subplot(121), im([brainMask.'.*thetaBaseSub(:,:,jj).' brainMask.'.*thetaSENSE(:,:,jj).' brainMask.'.*-real(thetakcs(:,:,jj)).'].',[0 pi/2]);
-    %subplot(122),plot([thetaBaseSub_max thetaSENSE_max thetakcs_max thetaBaseSub_mean thetaSENSE_mean thetakcs_mean]),axis square;
-    %legend('Base sub, max','SENSE, max','kseg, max','Base sub, mean','SENSE, mean','kseg, mean');
-    %drawnow
-
 end
 
-%save braininvivoresults
-
-%return
+save braininvivoresults
+return
 
 
 %% plot results
